@@ -1,34 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="register.js" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="login.css">
 </head>
 <body>
-     <main>
-        <div class="form-container">
-            <h1>Crear cuenta</h1>
-            <p>
-                Crea una cuenta para iniciar sesións.
-            </p>
-            <form id="register-form" action="">
-                <label for="user" class="sr-only">User</label>
-                <input type="email" id="user" name="user" placeholder="Nombre de usuario" required>
-                <label for="email" class="sr-only">Email</label>
-                <input type="email" id="email" name="email" placeholder="Correo electronico" required>
-                 <label for="password" class="sr-only">Password</label>
-                <input type="password" id="password" name="password" placeholder="Contraseña" required>
-                <button type="submit"> Iniciar sesión</button>
-                <p class="error escondido"> Error al registrarse</p>
-            
-            </form>
-            <p>
-                ¿Ya estas registrado? - <a href="/">Inicia sesion aquí</a>
-            </p>
+
+<div class="register-wrapper">
+    <div class="register-card shadow-lg">
+        <div class="text-center mb-4">
+            <h2>Empezemos!</h2>
+            <p>Crea tu cuenta</p>
         </div>
-    </main>
+
+        <form id="registerForm">
+            <div class="mb-3">
+                <label>Nombre de usuario</label>
+                <input type="text" id="user" name="user" class="form-control" placeholder="Usuario" required>
+                <small id="userFeedback"></small>
+            </div>
+            <div class="mb-3">
+                <label>Correo</label>
+                <input type="email" id="email" class="form-control" placeholder="Correo" required>
+            </div>
+           <div class="mb-3">
+                <label>Contraseña</label>
+                <div class="input-group">
+                    <input type="password" id="password" class="form-control" placeholder="Contraseña" required>
+                    <button type="button" id="togglePassword" class="btn btn-outline-secondary">👁</button>
+                    <button type="button" id="generatePassword" class="btn btn-outline-primary">Generar</button>
+                </div>
+                <div class="mt-2">
+                    <div class="progress">
+                        <div id="passwordStrength" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small id="passwordFeedback" class="text-muted"></small>
+                </div>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="terms" required>
+                <label class="form-check-label">Yo acepto los terminos de privacidad</label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Registrar</button>
+        </form>
+
+        <div class="text-center mt-3">
+            <small>Ya tienes una cuenta? <a href="/">Inicia sesión</a></small>
+        </div>
+    </div>
+</div>
+
+<script src="register.js"></script>
 </body>
 </html>

@@ -1,0 +1,35 @@
+body {
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    font-family: 'Poppins', sans-serif;
+}
+
+.login-wrapper, .register-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.login-card, .register-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 380px;
+}
+
+h2 {
+    font-weight: 600;
+}
+
+button {
+    border-radius: 10px;
+}
+
+a {
+    color: #6e8efb;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}

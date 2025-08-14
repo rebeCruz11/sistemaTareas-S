@@ -1,0 +1,154 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+
+.login-wrapper,
+.register-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+
+.login-card,
+.register-card {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 40px 30px;
+    max-width: 400px;
+    width: 100%;
+    animation: fadeInUp 0.8s ease forwards;
+}
+
+
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(50px);}
+    100% { opacity: 1; transform: translateY(0);}
+}
+
+
+.login-card h2,
+.register-card h2 {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.login-card p,
+.register-card p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+
+.form-control {
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #764ba2;
+    box-shadow: 0 0 5px rgba(118, 75, 162, 0.3);
+    outline: none;
+}
+
+
+.input-group .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group button {
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #ccc;
+    border-left: none;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.input-group button:hover {
+    background: #e2e6ea;
+}
+
+
+.btn-primary {
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 600;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(118, 75, 162, 0.3);
+}
+
+
+.form-check-label {
+    font-size: 14px;
+    color: #555;
+}
+
+
+a {
+    text-decoration: none;
+    color: #764ba2;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: #667eea;
+}
+
+
+.progress {
+    height: 6px;
+    border-radius: 5px;
+    background: #eee;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+
+#passwordFeedback {
+    font-size: 12px;
+    color: #555;
+}
+
+
+@media (max-width: 480px) {
+    .login-card,
+    .register-card {
+        padding: 30px 20px;
+    }
+
+    .input-group button {
+        padding: 0 8px;
+        font-size: 14px;
+    }
+}

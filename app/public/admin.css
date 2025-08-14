@@ -1,0 +1,26 @@
+body {
+  background: linear-gradient(135deg, #fdfbfb, #ebedee);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h1 {
+  font-weight: bold;
+  color: #333;
+}
+
+p.lead {
+  color: #555;
+}
+
+.navbar {
+  box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
+}
+
+button#logoutBtn {
+  transition: 0.3s;
+}
+
+button#logoutBtn:hover {
+  background-color: #f44336;
+  border: none;
+}
