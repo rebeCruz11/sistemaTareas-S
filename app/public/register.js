@@ -142,6 +142,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
 
     const data = await res.json();
     if (data.status === "ok") {
+         localStorage.setItem("emailRegistro", email); 
         window.location.href = data.redirect;
     } else {
         alert(data.message);

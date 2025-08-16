@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 export async function enviarCorreoVerificacion(email) {
     //Crear token de verificación (expira en 1 hora)
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "5m" });
 
     //Configuración del transportador de correo
     const transporter = nodemailer.createTransport({
@@ -32,7 +32,7 @@ export async function enviarCorreoVerificacion(email) {
                     </a>
                 </div>
                     <p style="color: #999; font-size: 14px; text-align: center;">
-                        Este enlace expirará en 1 hora. Si no creaste una cuenta, puedes ignorar este correo.
+                        Este enlace expirará en 5 minutos. Si no creaste una cuenta, puedes ignorar este correo.
                     </p>
                     <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
                     <p style="color: #aaa; font-size: 12px; text-align: center;">

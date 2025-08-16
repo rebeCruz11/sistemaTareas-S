@@ -92,14 +92,18 @@ async function register(req, res) {
         const salt = await bcryptjs.genSalt(5);
         const hashPassword = await bcryptjs.hash(password, salt);
 
+        const ahora = new Date();
+
         // Guardar usuario
         const nuevoUsuario = new User({
             user,
             email,
             password: hashPassword,
-            emailVerificado: false
-        });
+            emailVerificado: false,
+            ultimoTokenEnviado: ahora
 
+        });
+           
         await nuevoUsuario.save();
 
         // Enviar correo de verificación sin bloquear el registro
@@ -112,11 +116,11 @@ async function register(req, res) {
         return res.status(201).send({
             status: "ok",
             message: `Usuario ${nuevoUsuario.user} agregado`,
-            redirect: "/"
+            redirect: "/verifica-email"
         });
 
     } catch (err) {
-        res.status(500).send({ status: "Error", message: "Error en el servidor", error: err.message });
+        res.status(500).send({ status: "Error", message: "Error en el servidor no se pueedo guardar", error: err.message });
     }
 }
 

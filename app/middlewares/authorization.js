@@ -38,4 +38,4 @@ async function revisarCookie(req) {
     }
 }
 
-export const methods = { soloAdmin, soloPublico };
+export const methods = { soloAdmin, soloPublico};
