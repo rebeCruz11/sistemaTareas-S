@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <title>Dashboard de Proyectos - Enhanced</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/project.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-rocket me-2"></i>
+                    Tech
+                </a>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <span id="currentUserName">Usuario</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="main-container">
+                <h2 class="dashboard-title">
+                    <i class="fas fa-tachometer-alt me-3"></i>
+                    Dashboard de Proyectos
+                </h2>
+
+                <!-- Create Project Section -->
+                <div class="seccion-proyectos mb-5">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-8 mx-auto">
+                            <div class="create-project-card">
+                                <div class="mb-3">
+                                    <i class="fas fa-plus-circle" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="card-title mb-3" style="font-weight: 400;">Crear Nuevo Proyecto</h5>
+                                <p class="mb-4" style="opacity: 0.9;">Inicia un nuevo proyecto y organiza tu trabajo de manera eficiente</p>
+                                <button type="button" class="create-btn" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                                    <i class="fas fa-rocket me-2"></i>
+                                    Crear Proyecto
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects Cards Section -->
+                <div class="seccion-proyectos-cards">
+                    <div class="projects-header">
+                        <h4>
+                            <i class="fas fa-list me-2"></i>
+                            Proyectos Recientes
+                        </h4>
+                        <div class="search-container">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Buscar proyectos..." id="searchProjects">
+                                <button class="btn btn-outline-secondary" type="button">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Projects Cards Container -->
+                    <div class="row" id="projectsCardsContainer">
+                        <!-- Los proyectos se cargarán dinámicamente aquí -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-state d-none" id="emptyState">
+                        <i class="fas fa-folder-open"></i>
+                        <h5>No hay proyectos aún</h5>
+                        <p>Crea tu primer proyecto para comenzar</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Crear Proyecto -->
+        <div class="modal fade" id="createProjectModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Crear Nuevo Proyecto
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="projectForm">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="nombre" class="form-label">
+                                            <i class="fas fa-tag me-2"></i>
+                                            Nombre del Proyecto *
+                                        </label>
+                                        <input type="text" class="form-control" id="nombre" name="nombre" 
+                                               placeholder="Ingresa el nombre del proyecto" required maxlength="100">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="prioridad" class="form-label">
+                                            <i class="fas fa-exclamation-circle me-2"></i>
+                                            Prioridad
+                                        </label>
+                                        <select class="form-select" id="prioridad" name="prioridad">
+                                            <option value="Baja">Baja</option>
+                                            <option value="Media" selected>Media</option>
+                                            <option value="Alta">Alta</option>
+                                            <option value="Crítica">Crítica</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">
+                                    <i class="fas fa-align-left me-2"></i>
+                                    Descripción
+                                </label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" 
+                                          rows="3" placeholder="Describe tu proyecto..." maxlength="500"></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="fechaInicio" class="form-label">
+                                            <i class="fas fa-calendar-alt me-2"></i>
+                                            Fecha de Inicio *
+                                        </label>
+                                        <input type="date" class="form-control" id="fechaInicio" name="fechaInicio" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="fechaFin" class="form-label">
+                                            <i class="fas fa-calendar-check me-2"></i>
+                                            Fecha de Fin
+                                        </label>
+                                        <input type="date" class="form-control" id="fechaFin" name="fechaFin">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="estado" class="form-label">
+                                            <i class="fas fa-flag me-2"></i>
+                                            Estado
+                                        </label>
+                                        <select class="form-select" id="estado" name="estado">
+                                            <option value="Activo" selected>Activo</option>
+                                            <option value="En Pausa">En Pausa</option>
+                                            <option value="Completado">Completado</option>
+                                            <option value="Cancelado">Cancelado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-save">
+                                    <i class="fas fa-save me-2"></i>
+                                    Guardar Proyecto
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Editar Proyecto -->
+        <div class="modal fade" id="editProjectModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit me-2"></i>
+                            Editar Proyecto
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editProjectForm">
+                            <input type="hidden" id="editProjectId" name="projectId">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="editNombre" class="form-label">
+                                            <i class="fas fa-tag me-2"></i>
+                                            Nombre del Proyecto *
+                                        </label>
+                                        <input type="text" class="form-control" id="editNombre" name="nombre" required maxlength="100">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="editPrioridad" class="form-label">
+                                            <i class="fas fa-exclamation-circle me-2"></i>
+                                            Prioridad
+                                        </label>
+                                        <select class="form-select" id="editPrioridad" name="prioridad">
+                                            <option value="Baja">Baja</option>
+                                            <option value="Media">Media</option>
+                                            <option value="Alta">Alta</option>
+                                            <option value="Crítica">Crítica</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editDescripcion" class="form-label">
+                                    <i class="fas fa-align-left me-2"></i>
+                                    Descripción
+                                </label>
+                                <textarea class="form-control" id="editDescripcion" name="descripcion" 
+                                          rows="3" maxlength="500"></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editFechaInicio" class="form-label">
+                                            <i class="fas fa-calendar-alt me-2"></i>
+                                            Fecha de Inicio *
+                                        </label>
+                                        <input type="date" class="form-control" id="editFechaInicio" name="fechaInicio" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editFechaFin" class="form-label">
+                                            <i class="fas fa-calendar-check me-2"></i>
+                                            Fecha de Fin
+                                        </label>
+                                        <input type="date" class="form-control" id="editFechaFin" name="fechaFin">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editEstado" class="form-label">
+                                            <i class="fas fa-flag me-2"></i>
+                                            Estado
+                                        </label>
+                                        <select class="form-select" id="editEstado" name="estado">
+                                            <option value="Activo">Activo</option>
+                                            <option value="En Pausa">En Pausa</option>
+                                            <option value="Completado">Completado</option>
+                                            <option value="Cancelado">Cancelado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end">
+                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-save">
+                                    <i class="fas fa-save me-2"></i>
+                                    Actualizar Proyecto
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+    <script src="project.js"></script>
+   <script>
+        window.addEventListener("DOMContentLoaded", () => {
+            loadProjects(); 
+        });
+    </script>
+   
+</body>
+</html>

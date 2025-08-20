@@ -16,6 +16,11 @@ import session from "express-session";
 import passport from "passport";
 import "./config/passport.js"; 
 import * as webauthn from "./controllers/webauthn.controller.js";
+import {methods as project} from "./controllers/project.controller.js"
+import {methods as task} from "./controllers/task.controller.js";
+import jwt from "jsonwebtoken";
+
+
 
 
 
@@ -86,6 +91,35 @@ app.post("/api/logout", (req, res) => {
     return res.send({ status: "ok", message: "Sesión cerrada" });
 });
 // ... (resto de las importaciones y configuraciones)
+
+
+
+
+app.get("/project",authorization.soloAdmin,(req,res)=> res.sendFile(__dirname + "/pages/project.html"));
+app.post("/api/projects",project.createProject);
+app.get("/api/projects", project.getProjects);
+
+app.get("/task",authorization.soloAdmin,(req,res)=> res.sendFile(__dirname + "/pages/task.html"));
+app.get("/api/tasks/:projectId", (req, res) => {
+    console.log("projectId recibido en backend:", req.params.projectId);
+});
+// Obtener tareas de un proyecto usando params
+app.get("/api/tasks/", task.getTask);
+app.post("/api/tasks", task.createTask);
+app.post("/api/tasks/:projectId",task.createTask);
+app.put("/api/tasks/:id", task.updateTask); 
+
+
+
+app.get("/api/users", authorization.soloAdmin, async (req, res) => {
+    try {
+        const users = await User.find(); // trae todos los usuarios de la base de datos
+        res.json(users); // devuelve JSON
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error al obtener los usuarios" });
+    }
+});
 
 // Esta es la ruta para el archivo profile.html estático
 app.get("/profile", authorization.soloAdmin, (req, res) => res.sendFile(__dirname + "/pages/admin/profile.html"));

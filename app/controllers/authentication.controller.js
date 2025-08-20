@@ -56,7 +56,7 @@ async function login(req, res) {
         };
 
         res.cookie("jwt", token, cookieOption);
-        res.send({ status: "ok", message: "Usuario logueado", redirect: "/admin" });
+        res.send({ status: "ok", message: "Usuario logueado", redirect: "/project" });
 
     } catch (err) {
         res.status(500).send({ status: "Error", message: "Error en el servidor", error: err.message });
