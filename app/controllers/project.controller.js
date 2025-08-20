@@ -21,7 +21,7 @@ export const methods = {
             }
             
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await User.findOne({ user: decoded.user });
+            const user = await User.findOne({ email: decoded.email });
             console.log("Usuario decodificado:", decoded);
             console.log("Usuario encontrado:", user);
 
