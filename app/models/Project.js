@@ -17,7 +17,10 @@ const projectSchema = new mongoose.Schema({
     enum: ["Baja", "Media", "Alta", "Crítica"], 
     default: "Media" 
   },
-
+  voiceTranscription: { // Campo que se encriptará
+    type: String,
+    default: null
+  }
 });
 
 export default mongoose.model("Project", projectSchema);

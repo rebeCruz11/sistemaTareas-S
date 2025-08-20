@@ -10,6 +10,7 @@ document.getElementById("projectForm").addEventListener("submit", async (e) => {
     const fechaFin = document.getElementById("fechaFin").value;
     const estado = document.getElementById("estado").value;
     const prioridad = document.getElementById("prioridad").value;
+    const Voice = document.getElementById("")
 
     const res = await fetch("/api/projects", {
         method: "POST",
@@ -174,9 +175,129 @@ async function loadProjects() {
 
 
 function addTask(projectId) {
-    console.log(" Enviando projectId:", projectId);
+    console.log("Enviando projectId:", projectId);
+
+    // Guardar ID actual en variable global
+    window.currentProjectId = projectId;
+
+    // Abrir modal de verificación por voz
+    const voiceModal = new bootstrap.Modal(document.getElementById('voiceVerificationModal'));
+    voiceModal.show();
+}
+
+
+// Voice verification functionality
+let recognition = null;
+let currentTranscription = '';
+
+function initializeVoiceRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('Tu navegador no soporta reconocimiento de voz. Se usará verificación alternativa.');
+        proceedToTaskCreation(window.currentProjectId);
+        return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = function() {
+        document.getElementById('voiceStatus').innerHTML = '<span class="text-primary"><i class="fas fa-circle-pulse me-2"></i>Escuchando...</span>';
+        document.getElementById('voiceIcon').style.color = '#dc3545';
+    };
+
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        currentTranscription = transcript;
+        
+        // Display the transcribed text
+        document.getElementById('transcribedText').textContent = transcript;
+        document.getElementById('transcriptionResult').style.display = 'block';
+        
+        // Show confirmation button
+        document.getElementById('startVoiceBtn').style.display = 'none';
+        document.getElementById('confirmVoiceBtn').style.display = 'block';
+        
+        document.getElementById('voiceStatus').innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-2"></i>Frase capturada</span>';
+        document.getElementById('voiceIcon').style.color = '#28a745';
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Error de reconocimiento:', event.error);
+        document.getElementById('voiceStatus').innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error: ' + event.error + '</span>';
+        document.getElementById('voiceIcon').style.color = '#6c757d';
+    };
+
+    recognition.onend = function() {
+        document.getElementById('voiceIcon').style.color = '#6c757d';
+    };
+}
+
+// Start voice recording
+document.getElementById('startVoiceBtn').addEventListener('click', function() {
+    if (!recognition) {
+        initializeVoiceRecognition();
+    }
+    
+    try {
+        recognition.start();
+    } catch (error) {
+        console.error('Error al iniciar reconocimiento:', error);
+    }
+});
+
+// Confirm voice verification
+document.getElementById('confirmVoiceBtn').addEventListener('click', async function() {
+    if (!currentTranscription) {
+        alert('No se ha capturado ninguna frase');
+        return;
+    }
+
+    try {
+        // Enviar transcripción cruda al backend para comparación
+        const response = await fetch(`/api/projects/${window.currentProjectId}/voice-verification`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                transcriptionAttempt: currentTranscription
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.status === 'ok') {
+            // ✅ Verificación correcta
+            const voiceModal = bootstrap.Modal.getInstance(document.getElementById('voiceVerificationModal'));
+            voiceModal.hide();
+            proceedToTaskCreation(window.currentProjectId);
+        } else {
+            // ❌ Falló la verificación
+            alert('La frase no coincide con la transcripción guardada. Intenta de nuevo.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al procesar la verificación por voz');
+    }
+});
+
+
+// Proceed to task creation after verification
+function proceedToTaskCreation(projectId) {
     window.location.href = `/task?projectId=${projectId}`;
 }
+
+// Initialize voice recognition when modal is shown
+document.getElementById('voiceVerificationModal').addEventListener('shown.bs.modal', function() {
+    currentTranscription = '';
+    document.getElementById('transcriptionResult').style.display = 'none';
+    document.getElementById('startVoiceBtn').style.display = 'block';
+    document.getElementById('confirmVoiceBtn').style.display = 'none';
+    document.getElementById('voiceStatus').innerHTML = '<span class="text-muted">Haz clic en el botón para comenzar</span>';
+});
 
 document.getElementById('searchProjects').addEventListener('input', searchProjects);
 
