@@ -11,7 +11,10 @@ const userSchema = new mongoose.Schema({
     emailVerificado: { type: Boolean, default: false },
     ultimoTokenEnviado: { type: Date },
     passkeys: { type: Array, default: [] },
-    webauthnChallenge: { type: String, default: null }
+    webauthnChallenge: { type: String, default: null },
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: { type: String, default: null }
+    
 });
 
 export default mongoose.model("User", userSchema);

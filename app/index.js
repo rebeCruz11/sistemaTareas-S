@@ -18,6 +18,7 @@ import "./config/passport.js";
 import * as webauthn from "./controllers/webauthn.controller.js";
 import {methods as project} from "./controllers/project.controller.js"
 import {methods as task} from "./controllers/task.controller.js";
+import * as twofa from "./controllers/twofa.controller.js";
 
 
 
@@ -91,6 +92,11 @@ app.post("/api/logout", (req, res) => {
     return res.send({ status: "ok", message: "Sesión cerrada" });
 });
 // ... (resto de las importaciones y configuraciones)
+
+//Rutas de google authentication
+// Habilitar Google Authenticator (solo admins ya logueados)
+app.post("/2fa/generate", authorization.soloAdmin, twofa.generate2FA);
+app.post("/2fa/verify", authorization.soloAdmin, twofa.verify2FA);
 
 
 //Rutas de proyectos y tareas
