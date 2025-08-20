@@ -18,7 +18,7 @@ import "./config/passport.js";
 import * as webauthn from "./controllers/webauthn.controller.js";
 import {methods as project} from "./controllers/project.controller.js"
 import {methods as task} from "./controllers/task.controller.js";
-import jwt from "jsonwebtoken";
+
 
 
 
@@ -93,7 +93,7 @@ app.post("/api/logout", (req, res) => {
 // ... (resto de las importaciones y configuraciones)
 
 
-
+//Rutas de proyectos y tareas
 
 app.get("/project",authorization.soloAdmin,(req,res)=> res.sendFile(__dirname + "/pages/project.html"));
 app.post("/api/projects",project.createProject);
