@@ -50,15 +50,32 @@ export const methods = {
     }
     ,
     async getProjects(req, res) {
-        try {
-            const projects = await Project.find().populate("creadoPor", "user email");
-            res.status(200).json(projects);
-        } catch (error) {
-            console.error("Error obteniendo proyectos:", error);
-            res.status(500).json({ status: "error", message: "Error obteniendo los proyectos" });
-        }   
-    }
-    ,
+    try {
+        // Obtener el token del usuario
+        const token = req.cookies.jwt;
+        if (!token) {
+            return res.status(401).json({ status: "error", message: "No autorizado" });
+        }
+
+        // Decodificar token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Buscar el usuario
+        const user = await User.findOne({ email: decoded.email });
+        if (!user) {
+            return res.status(404).json({ status: "error", message: "Usuario no encontrado" });
+        }
+
+        // Buscar solo los proyectos creados por ese usuario
+        const projects = await Project.find({ creadoPor: user._id }).populate("creadoPor", "email");
+
+        res.status(200).json(projects);
+    } catch (error) {
+        console.error("Error obteniendo proyectos:", error);
+        res.status(500).json({ status: "error", message: "Error obteniendo los proyectos" });
+    }   
+}
+,
     async getProjectById(req, res) {
         try {
             const project = await Project.findById(req.params.id).populate("creadoPor", "user email");

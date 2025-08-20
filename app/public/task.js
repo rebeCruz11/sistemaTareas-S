@@ -22,6 +22,26 @@ async function loadUsers() {
     }
 }
 
+// Abrir el modal para crear una nueva tarea
+function openTaskModal() {
+    const modal = document.getElementById("taskModal");
+    document.getElementById("modalTitle").innerHTML = `
+        <i class="fas fa-plus-circle me-2"></i> Nueva Tarea
+    `;
+
+    // Reiniciar formulario
+    document.getElementById("taskForm").reset();
+
+    modal.classList.add("show");
+}
+
+// Cerrar el modal
+function closeTaskModal() {
+    const modal = document.getElementById("taskModal");
+    modal.classList.remove("show");
+}
+
+
 // Cargar tareas dinámicamente según projectId
 async function loadTasks() {
     if (!projectId) {
@@ -143,6 +163,11 @@ function getPriorityClass(priority) {
         case "Crítica": return "badge bg-dark";
         default: return "badge bg-light";
     }
+}
+
+function openTaskModal(){
+
+
 }
 
 // Formulario para agregar tarea
