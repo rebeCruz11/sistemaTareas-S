@@ -11,6 +11,15 @@ import User from "./models/User.js"; //este es el modelo de usuario
 import renderMessage from "./utils/renderMessage.js"; // este es el renderizador de mensajess
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+//Lo que agregue para google
+import session from "express-session";
+import passport from "passport";
+import "./config/passport.js"; 
+import * as webauthn from "./controllers/webauthn.controller.js";
+
+
+
+
 dotenv.config();
 
 mongoose.connect(process.env.MONGODB_URI, {
@@ -34,17 +43,79 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 
+// Config sesión
+app.use(session({
+    secret: process.env.JWT_SECRET,
+    resave: false,
+    saveUninitialized: true
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Rutas Google
+app.get("/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+app.get("/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/" }),
+    (req, res) => {
+        // Crear JWT y enviarlo como cookie
+        const token = jwt.sign(
+            { user: req.user.user, email: req.user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRATION }
+        );
+
+        res.cookie("jwt", token, { httpOnly: true, path: "/" });
+        res.redirect("/admin"); // Redirige al dashboard
+    }
+);
+
 
 //Rutas
 app.get("/",authorization.soloPublico, (req,res)=> res.sendFile(__dirname + "/pages/login.html"));
 app.get("/register",authorization.soloPublico,(req,res)=> res.sendFile(__dirname + "/pages/register.html"));
 app.get("/admin",authorization.soloAdmin,(req,res)=> res.sendFile(__dirname + "/pages/admin/admin.html"));
+// server.js
 app.post("/api/login",authentication.login);
 app.post("/api/register",authentication.register);
 app.post("/api/logout", (req, res) => {
     res.clearCookie("jwt", { path: "/" });
     return res.send({ status: "ok", message: "Sesión cerrada" });
 });
+// ... (resto de las importaciones y configuraciones)
+
+// Esta es la ruta para el archivo profile.html estático
+app.get("/profile", authorization.soloAdmin, (req, res) => res.sendFile(__dirname + "/pages/admin/profile.html"));
+
+// Nueva ruta para obtener la información del usuario
+app.get('/api/user-info', authorization.soloAdmin, async (req, res) => {
+    try {
+        const token = req.cookies.jwt;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findOne({ email: decoded.email });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        // Envía el nombre de usuario y el email al frontend
+        res.json({ user: user.user, email: user.email });
+    } catch (err) {
+        console.error("Error en /api/user-info:", err);
+        res.status(401).json({ error: 'Token inválido o expirado' });
+    }
+});
+
+app.post('/webauthn/register-challenge', authorization.soloAdmin, webauthn.registerChallenge);
+app.post('/webauthn/register-verify', authorization.soloAdmin, webauthn.registerVerify);
+
+// Rutas de la API de WebAuthn NO protegidas (para iniciar sesión)
+app.post('/webauthn/login-challenge', webauthn.loginChallenge);
+app.post('/webauthn/login-verify', webauthn.loginVerify);
+
 
 
 app.get("/verificar/:token", async (req, res) => {
@@ -252,8 +323,3 @@ app.get("/acceso-denegado", (req, res) => {
         linkText: "Ir al registro"
     }));
 });
-
-
-
-
-

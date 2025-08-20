@@ -22,13 +22,13 @@ function verificarDominioEmail(email) {
 
 async function login(req, res) {
     try {
-        const { user, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!user || !password) {
+        if (!email  || !password) {
             return res.status(400).send({ status: "Error", message: "Los campos están incompletos" });
         }
 
-        const usuarioAResvisar = await User.findOne({ user });
+        const usuarioAResvisar = await User.findOne({ email  });
         if (!usuarioAResvisar) {
             return res.status(400).send({ status: "Error", message: "Usuario no encontrado" });
         }
@@ -44,7 +44,7 @@ async function login(req, res) {
         }
 
         const token = jsonwebtoken.sign(
-            { user: usuarioAResvisar.user },
+            {email: usuarioAResvisar.email },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_EXPIRATION }
         );

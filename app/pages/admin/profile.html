@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+</head>
+<body>
+    <h1>Profile Page</h1>
+    <p>¡Hola, <span id="username"></span>!</p>
+    <button id="register-passkey-btn">Register Passkey</button>
+
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+<script>
+const { startRegistration } = SimpleWebAuthnBrowser;
+
+async function getUserInfo() {
+    try {
+        const res = await fetch('/api/user-info');
+        if (!res.ok) throw new Error('No se pudo obtener la información del usuario.');
+        return await res.json();
+    } catch (error) {
+        console.error("Error al obtener info del usuario:", error);
+        alert('Error al cargar datos del usuario. Inicia sesión de nuevo.');
+        return null;
+    }
+}
+
+async function initPage() {
+    const userInfo = await getUserInfo();
+    if (!userInfo) return;
+
+    document.getElementById('username').textContent = userInfo.user;
+    const userEmail = userInfo.email;
+
+    document.getElementById("register-passkey-btn").addEventListener("click", async () => {
+        try {
+            // Solicitar challenge al servidor
+            const res = await fetch("/webauthn/register-challenge", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: userEmail }),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Error desconocido del servidor.');
+            }
+
+            const { options } = await res.json();
+            if (!options) throw new Error('No se recibieron opciones de registro.');
+
+            // Registrar passkey en el navegador
+            const cred = await startRegistration({ optionsJSON: options });
+
+            // Enviar resultado al servidor para verificar
+            const verifyRes = await fetch("/webauthn/register-verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: userEmail, cred }),
+            });
+
+            const verifyData = await verifyRes.json().catch(() => ({}));
+            if (verifyData.verified) {
+                alert("✅ Passkey registrada con éxito");
+            } else {
+                alert("❌ Falló el registro: " + (verifyData.error || 'Verificación fallida.'));
+            }
+        } catch (error) {
+            console.error("Error al registrar passkey:", error);
+            let msg = error.message || error;
+            if (msg.includes("NotAllowedError")) {
+                msg = "Operación cancelada o no permitida. Asegúrate de interactuar con el dispositivo.";
+            }
+            alert(`❌ Ocurrió un error: ${msg}`);
+        }
+    });
+}
+
+initPage();
+</script>
+
+
+</body>
+</html>
+

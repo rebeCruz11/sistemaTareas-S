@@ -29,7 +29,7 @@ async function revisarCookie(req) {
         const decodificada = jsonwebtoken.verify(cookieJWT, process.env.JWT_SECRET);
 
         // Buscar usuario en la base de datos
-        const usuarioAResvisar = await User.findOne({ user: decodificada.user });
+        const usuarioAResvisar = await User.findOne({ email: decodificada.email });
         if (!usuarioAResvisar) return false;
 
         return true;
