@@ -63,10 +63,28 @@ app.use(passport.session());
 app.get("/auth/google",
     passport.authenticate("google", { scope: ["profile", "email"] })
 );
-
+/*
 app.get("/auth/google/callback",
     passport.authenticate("google", { failureRedirect: "/" }),
     (req, res) => {
+        const user = User.findOne({ email: req.user.email });
+
+        if (!user) {
+            return res.redirect("/"); // Por seguridad
+        }
+
+        // Si tiene 2FA activado, lo mandamos a la ruta /2fa
+        if (user.twoFactorEnabled) {
+            // Guardamos en sesión o cookie que el login está "pendiente de 2FA"
+            req.session.pending2FA = {
+                userId: user._id,
+                email: user.email
+            };
+
+            return res.redirect("/2fa"); 
+        }
+
+
         // Crear JWT y enviarlo como cookie
         const token = jwt.sign(
             { user: req.user.user, email: req.user.email },
@@ -74,10 +92,47 @@ app.get("/auth/google/callback",
             { expiresIn: process.env.JWT_EXPIRATION }
         );
 
+
+
         res.cookie("jwt", token, { httpOnly: true, path: "/" });
         res.redirect("/admin"); // Redirige al dashboard
     }
 );
+*/
+app.get("/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/" }),
+    async (req, res) => { // <-- async
+        try {
+            const user = await User.findOne({ email: req.user.email }); // <-- await
+
+            if (!user) return res.redirect("/");
+
+            if (user.twoFactorEnabled) {
+                req.session.pending2FA = {
+                    userId: user._id,
+                    email: user.email
+                };
+                return res.redirect("/2fa"); // ✅ redirige correctamente
+            }
+
+            // Si no tiene 2FA, se crea JWT y se manda al admin
+            const token = jwt.sign(
+                { user: user.user, email: user.email },
+                process.env.JWT_SECRET,
+                { expiresIn: process.env.JWT_EXPIRATION }
+            );
+
+            res.cookie("jwt", token, { httpOnly: true, path: "/" });
+            res.redirect("/admin");
+        } catch (err) {
+            console.error("Error callback Google:", err);
+            res.redirect("/"); // evita mostrar error crudo
+        }
+    }
+);
+
+
+
 
 
 //Rutas
@@ -97,6 +152,14 @@ app.post("/api/logout", (req, res) => {
 // Habilitar Google Authenticator (solo admins ya logueados)
 app.post("/2fa/generate", authorization.soloAdmin, twofa.generate2FA);
 app.post("/2fa/verify", authorization.soloAdmin, twofa.verify2FA);
+app.post("/2fa/verify-login", twofa.verifyLogin);
+app.get("/2fa", (req, res) => {
+    if (!req.session.pending2FA) {
+        return res.redirect("/"); // o mostrar error
+    }
+    res.sendFile(__dirname + "/pages/2fa.html");
+});
+
 
 
 //Rutas de proyectos y tareas

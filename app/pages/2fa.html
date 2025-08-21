@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificación 2FA</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body class="d-flex justify-content-center align-items-center vh-100 bg-light">
+  <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
+    <div class="text-center mb-3">
+      <h3>Verificación en dos pasos</h3>
+      <p>Introduce el código de 6 dígitos generado por tu app de autenticación</p>
+    </div>
+
+    <form id="twofaForm">
+      <div class="mb-3">
+        <label for="twofa-token" class="form-label">Código 2FA</label>
+        <input type="text" id="twofa-token" class="form-control text-center" maxlength="6" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Verificar</button>
+    </form>
+
+    <div id="twofa-error" class="alert alert-danger mt-3 d-none"></div>
+  </div>
+
+  <script>
+    document.getElementById("twofaForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const token = document.getElementById("twofa-token").value.trim();
+
+      if (!token) return;
+
+      try {
+        const res = await fetch("/2fa/verify-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          // ✅ Redirigir al perfil si pasa la verificación
+          window.location.href = "/project";
+        } else {
+          document.getElementById("twofa-error").textContent = data.message || "Código incorrecto";
+          document.getElementById("twofa-error").classList.remove("d-none");
+        }
+      } catch (err) {
+        console.error("Error en verificación 2FA:", err);
+        document.getElementById("twofa-error").textContent = "Error en el servidor";
+        document.getElementById("twofa-error").classList.remove("d-none");
+      }
+    });
+  </script>
+</body>
+</html>

@@ -56,7 +56,29 @@ async function login(req, res) {
         };
 
         res.cookie("jwt", token, cookieOption);
-        res.send({ status: "ok", message: "Usuario logueado", redirect: "/project" });
+
+        /*
+
+         if (usuarioAResvisar.twoFactorEnabled) {
+            // Usuario con 2FA activado → llévalo a la vista de verificación
+            return res.send({ status: "ok", message: "Usuario logueado, requiere 2FA", redirect: "/2fa" });
+        } else {
+            // Usuario normal sin 2FA → directo al dashboard
+            return res.send({ status: "ok", message: "Usuario logueado", redirect: "/project" });
+        }
+            */
+        if (usuarioAResvisar.twoFactorEnabled) {
+            req.session.pending2FA = {
+                userId: usuarioAResvisar._id,
+                email: usuarioAResvisar.email
+            };
+            return res.json({ status: "ok", message: "2FA requerido", redirect: "/2fa" });
+        }
+
+        // Si no tiene 2FA, sigue como antes:
+        res.cookie("jwt", token, cookieOption);
+        res.json({ status: "ok", message: "Usuario logueado", redirect: "/project" });
+
 
     } catch (err) {
         res.status(500).send({ status: "Error", message: "Error en el servidor", error: err.message });

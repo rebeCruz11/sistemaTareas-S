@@ -1,6 +1,8 @@
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 import User from "../models/User.js";
+import jwt from "jsonwebtoken";
+
 
 // Paso 1: Generar secreto y QR
 export const generate2FA = async (req, res) => {
@@ -33,7 +35,7 @@ export const verify2FA = async (req, res) => {
     const verified = speakeasy.totp.verify({
       secret: user.twoFactorSecret,
       encoding: "base32",
-      token
+      token,
     });
 
     if (!verified) {
@@ -49,3 +51,47 @@ export const verify2FA = async (req, res) => {
     res.status(500).json({ error: "Error interno" });
   }
 };
+export async function verifyLogin(req, res) {
+    try {
+        const { token } = req.body;
+        const pending = req.session.pending2FA;
+
+        if (!pending) {
+            return res.status(400).json({ success: false, message: "No hay sesión pendiente de 2FA" });
+        }
+
+        const user = await User.findById(pending.userId);
+        if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+            return res.status(400).json({ success: false, message: "Usuario no válido para 2FA" });
+        }
+
+        // Verificar token TOTP
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFactorSecret,
+            encoding: "base32",
+            token,
+            window: 1 // permite 1 intervalo de desfase
+        });
+
+        if (!verified) {
+            return res.status(400).json({ success: false, message: "Código incorrecto" });
+        }
+
+        // ✅ Generar JWT final
+        const jwtToken = jwt.sign(
+            { user: user.user, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRATION }
+        );
+
+        // Limpiar sesión pendiente
+        delete req.session.pending2FA;
+
+        res.cookie("jwt", jwtToken, { httpOnly: true, path: "/" });
+        res.json({ success: true, message: "2FA verificado" });
+
+    } catch (err) {
+        console.error("Error en /2fa/verify-login:", err);
+        res.status(500).json({ success: false, message: "Error en el servidor" });
+    }
+}
