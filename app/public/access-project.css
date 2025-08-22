@@ -1,0 +1,84 @@
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --border-radius: 16px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--primary-gradient);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+}
+
+/* Navbar minimal con botón volver */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 15px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+.btn-back {
+  background: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+  background: #f8f9fa;
+  transform: scale(1.05);
+}
+
+/* Card del formulario */
+.access-card {
+  background: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+
+.access-card h3 {
+  font-weight: 600;
+}
+
+.btn-gradient {
+  background: var(--secondary-gradient);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.modal-content {
+  border-radius: var(--border-radius);
+}
