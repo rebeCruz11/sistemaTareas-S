@@ -19,7 +19,7 @@ export const methods = {
         }
 
         const tasks = await Task.find({ proyecto: projectId });
-        res.json(tasks); // array directo
+        res.json(tasks);
     } catch (err) {
         console.error("Error obteniendo tareas:", err);
         res.status(500).json({ error: "Error obteniendo tareas" });

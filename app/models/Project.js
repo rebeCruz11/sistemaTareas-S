@@ -20,6 +20,13 @@ const projectSchema = new mongoose.Schema({
   voiceTranscription: { // Campo que se encriptará
     type: String,
     default: null
+  },
+  claveAcceso: {
+    type: String
+  },
+  usbKey: {
+    keyId: { type: String, required: false },
+    keyHash: { type: String, required: false }
   }
 });
 

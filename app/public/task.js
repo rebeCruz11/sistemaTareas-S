@@ -1,6 +1,10 @@
 let projectId = new URLSearchParams(window.location.search).get("projectId");
 let selectedTaskId = null;
 
+
+
+
+
 // Cargar usuarios para el modal de asignación
 async function loadUsers() {
     try {
@@ -165,10 +169,6 @@ function getPriorityClass(priority) {
     }
 }
 
-function openTaskModal(){
-
-
-}
 
 // Formulario para agregar tarea
 document.getElementById('taskForm')?.addEventListener('submit', async e => {

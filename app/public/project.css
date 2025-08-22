@@ -279,8 +279,7 @@ header {
    ======================================== */
 
 .modal-content {
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
+
     border: 1px solid var(--glass-border);
     border-radius: 20px;
     box-shadow: var(--shadow);
@@ -294,7 +293,7 @@ header {
 .modal-title {
     font-weight: 700;
     font-size: 1.5rem;
-    background: var(--primary-gradient);
+    background: white;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }

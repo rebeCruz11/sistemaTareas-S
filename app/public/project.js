@@ -10,18 +10,40 @@ document.getElementById("projectForm").addEventListener("submit", async (e) => {
     const fechaFin = document.getElementById("fechaFin").value;
     const estado = document.getElementById("estado").value;
     const prioridad = document.getElementById("prioridad").value;
-    const Voice = document.getElementById("")
+    const voiceTranscription = document.getElementById("voiceTranscription").value;
+    const claveAcceso = document.getElementById("password").value
+    const generarLlaveUSB = document.getElementById("generarLlaveUSB")?.checked || false;
+    const usbPath = document.getElementById("usbPath")?.value || null;
 
     const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({  nombre, descripcion ,fechaInicio, fechaFin, estado, prioridad })
+        body: JSON.stringify({ 
+            nombre, 
+            descripcion,
+            fechaInicio, 
+            fechaFin, 
+            estado, 
+            prioridad,
+            voiceTranscription,
+            claveAcceso,
+            generarLlaveUSB,
+            usbPath
+         })
     });
 
     const data = await res.json();
     if (data.status === "ok") {
         alert("Proyecto creado exitosamente");
-        window.location.reload();
+        if (data.generarLlaveUSB && data.usbPath) {
+            alert("🔐 Llave USB generada y guardada en: " + data.usbPath);
+        }
+
+        e.target.reset();
+        bootstrap.Modal.getInstance(document.getElementById("createProjectModal")).hide();
+        loadProjects();
+
+         window.location.reload();
     } else {
         alert(data.message || "Error creando el proyecto");
     }
@@ -162,6 +184,9 @@ async function loadProjects() {
                             <button class="btn-action btn-delete" onclick="deleteProject(${project.id})" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
+                            <button class="btn-action btn-access" onclick="window.location.href='/access-project'" title="Acceder con USB">
+                                <i class="fas fa-key"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -171,6 +196,74 @@ async function loadProjects() {
         projectsContainer.appendChild(card);
     });
 }   
+
+// async function accessProject() {
+//   const accessKey = document.getElementById("accessKeyInput").value;
+
+//   if (!accessKey) {
+//     alert("Por favor ingresa una clave");
+//     return;
+//   }
+
+//   try {
+//     const res = await fetch("http://localhost:4000/api/projects/access", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ clave: accessKey }) // 👈 debe coincidir con req.body.clave en el backend
+//     });
+
+//     const data = await res.json();
+
+//     if (!res.ok) {
+//       alert(data.msg);
+//       return;
+//     }
+
+//     // Guardar id y redirigir
+//     localStorage.setItem("projectId", data.projectId);
+//     window.location.href = `/task?projectId=${data.projectId}`;
+
+//   } catch (error) {
+//     console.error(error);
+//     alert("Error al conectar con el servidor");
+//   }
+// }
+document.getElementById("accessBtn").addEventListener("click", async () => {
+    const accessKey = document.getElementById("accessKeyInput").value;
+
+    if (!accessKey) {
+        alert("Por favor ingresa una clave");
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/projects/access", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clave: accessKey }) // debe coincidir con el backend
+        });
+
+        const data = await res.json();
+        console.log("Respuesta del backend:", data);
+
+        if (data.status === "ok") {
+            
+            localStorage.setItem("projectId", data.projectId);
+
+            
+            window.location.href = `/task?projectId=${data.projectId}`;
+
+            
+        } else {
+            
+            alert(data.message || "Clave inválida");
+        }
+
+    } catch (error) {
+        console.error("Error en el acceso:", error);
+        alert("Error al conectar con el servidor");
+    }
+});
 
 
 
@@ -185,124 +278,89 @@ function addTask(projectId) {
     voiceModal.show();
 }
 
-
-// Voice verification functionality
-let recognition = null;
-let currentTranscription = '';
-
-function initializeVoiceRecognition() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        alert('Tu navegador no soporta reconocimiento de voz. Se usará verificación alternativa.');
-        proceedToTaskCreation(window.currentProjectId);
-        return;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.lang = 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = function() {
-        document.getElementById('voiceStatus').innerHTML = '<span class="text-primary"><i class="fas fa-circle-pulse me-2"></i>Escuchando...</span>';
-        document.getElementById('voiceIcon').style.color = '#dc3545';
-    };
-
-    recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        currentTranscription = transcript;
-        
-        // Display the transcribed text
-        document.getElementById('transcribedText').textContent = transcript;
-        document.getElementById('transcriptionResult').style.display = 'block';
-        
-        // Show confirmation button
-        document.getElementById('startVoiceBtn').style.display = 'none';
-        document.getElementById('confirmVoiceBtn').style.display = 'block';
-        
-        document.getElementById('voiceStatus').innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-2"></i>Frase capturada</span>';
-        document.getElementById('voiceIcon').style.color = '#28a745';
-    };
-
-    recognition.onerror = function(event) {
-        console.error('Error de reconocimiento:', event.error);
-        document.getElementById('voiceStatus').innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error: ' + event.error + '</span>';
-        document.getElementById('voiceIcon').style.color = '#6c757d';
-    };
-
-    recognition.onend = function() {
-        document.getElementById('voiceIcon').style.color = '#6c757d';
-    };
-}
-
-// Start voice recording
-document.getElementById('startVoiceBtn').addEventListener('click', function() {
-    if (!recognition) {
-        initializeVoiceRecognition();
-    }
-    
-    try {
-        recognition.start();
-    } catch (error) {
-        console.error('Error al iniciar reconocimiento:', error);
-    }
-});
-
-// Confirm voice verification
-document.getElementById('confirmVoiceBtn').addEventListener('click', async function() {
-    if (!currentTranscription) {
-        alert('No se ha capturado ninguna frase');
-        return;
-    }
-
-    try {
-        // Enviar transcripción cruda al backend para comparación
-        const response = await fetch(`/api/projects/${window.currentProjectId}/voice-verification`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                transcriptionAttempt: currentTranscription
-            })
-        });
-
-        const data = await response.json();
-        
-        if (data.status === 'ok') {
-            // ✅ Verificación correcta
-            const voiceModal = bootstrap.Modal.getInstance(document.getElementById('voiceVerificationModal'));
-            voiceModal.hide();
-            proceedToTaskCreation(window.currentProjectId);
-        } else {
-            // ❌ Falló la verificación
-            alert('La frase no coincide con la transcripción guardada. Intenta de nuevo.');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error al procesar la verificación por voz');
-    }
-});
-
-
-// Proceed to task creation after verification
+// Proceder a creación de tareas
 function proceedToTaskCreation(projectId) {
     window.location.href = `/task?projectId=${projectId}`;
 }
 
-// Initialize voice recognition when modal is shown
-document.getElementById('voiceVerificationModal').addEventListener('shown.bs.modal', function() {
+
+
+// Reset del modal cada vez que se abre
+document.getElementById('voiceVerificationModal').addEventListener('shown.bs.modal', () => {
     currentTranscription = '';
+    document.getElementById('transcribedText').textContent = '';
     document.getElementById('transcriptionResult').style.display = 'none';
     document.getElementById('startVoiceBtn').style.display = 'block';
     document.getElementById('confirmVoiceBtn').style.display = 'none';
     document.getElementById('voiceStatus').innerHTML = '<span class="text-muted">Haz clic en el botón para comenzar</span>';
 });
 
+
 document.getElementById('searchProjects').addEventListener('input', searchProjects);
 
 document.addEventListener("DOMContentLoaded", () => {
     loadProjects();
     
+    
    
 });
+
+//acceder al proyecto
+
+
+// function actualizarIndicador(password) {
+//     const { fuerza, feedback } = validarContrasena(password);
+//     const barra = document.getElementById("passwordStrength");
+//     const texto = document.getElementById("passwordFeedback");
+
+//     const porcentajes = [0, 20, 40, 60, 80, 100];
+//     barra.style.width = porcentajes[fuerza] + "%";
+
+//     if (fuerza <= 2) {
+//         barra.className = "progress-bar bg-danger";
+//         texto.textContent = feedback.join(", ");
+//     } else if (fuerza <= 4) {
+//         barra.className = "progress-bar bg-warning";
+//         texto.textContent = feedback.join(", ");
+//     } else {
+//         barra.className = "progress-bar bg-success";
+//         texto.textContent = "Contraseña segura ✔";
+//     }
+// }
+
+
+
+// function generarContrasena(longitud = 12) {
+//     const mayus = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+//     const minus = "abcdefghijklmnopqrstuvwxyz";
+//     const numeros = "0123456789";
+//     const simbolos = "!@#$%^&*()_+[]{}<>?,.";
+
+//     const todo = mayus + minus + numeros + simbolos;
+
+//     let password = "";
+//     password += mayus[Math.floor(Math.random() * mayus.length)];
+//     password += minus[Math.floor(Math.random() * minus.length)];
+//     password += numeros[Math.floor(Math.random() * numeros.length)];
+//     password += simbolos[Math.floor(Math.random() * simbolos.length)];
+
+//     for (let i = 4; i < longitud; i++) {
+//         password += todo[Math.floor(Math.random() * todo.length)];
+//     }
+
+//     return password.split('').sort(() => Math.random() - 0.5).join('');
+// }
+
+// // Generar contraseña
+// document.getElementById("generatePassword").addEventListener("click", () => {
+//     const nuevaPass = generarContrasena();
+//     const inputPass = document.getElementById("password");
+//     inputPass.value = nuevaPass;
+//     actualizarIndicador(nuevaPass);
+// });
+
+// // Mostrar/ocultar contraseña
+// document.getElementById("togglePassword").addEventListener("click", () => {
+//     const inputPass = document.getElementById("password");
+//     inputPass.type = inputPass.type === "password" ? "text" : "password";
+// });

@@ -22,6 +22,7 @@ import * as twofa from "./controllers/twofa.controller.js";
 import { enviarCodigoRecuperacion } from "./services/recoveryEmailService.js";
 import crypto from "node:crypto";
 import bcrypt from "bcrypt"; 
+import Project from './models/Project.js';
 
 
 
@@ -184,6 +185,25 @@ app.post("/api/tasks", task.createTask);
 app.post("/api/tasks/:projectId",task.createTask);
 app.put("/api/tasks/:id", task.updateTask); 
 
+
+app.get("/access-project", authorization.soloAdmin, (req, res) => {
+    res.sendFile(__dirname + "/pages/access-project.html");
+});
+
+app.post("/api/access-with-usb", project.accessWithUsb);
+
+app.post("/api/access-with-usb", project.accessWithUsb);
+// Ruta de verificación por voz
+app.post('/api/projects/:id/voice-verification', project.voiceVerification);
+
+
+app.get("/task",authorization.soloAdmin,(req,res)=> res.sendFile(__dirname + "/pages/task.html"));
+// Obtener tareas de un proyecto por ID
+app.get("/api/tasks/:projectId", task.getTasksByProject);
+
+
+
+app.post("/api/projects/access", project.accessProject);
 
 
 app.get("/api/users", authorization.soloAdmin, async (req, res) => {
