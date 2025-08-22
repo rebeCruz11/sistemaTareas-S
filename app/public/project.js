@@ -253,7 +253,6 @@ document.getElementById("accessBtn").addEventListener("click", async () => {
             
             window.location.href = `/task?projectId=${data.projectId}`;
 
-            
         } else {
             
             alert(data.message || "Clave inválida");
