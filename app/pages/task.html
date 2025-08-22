@@ -36,12 +36,13 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--gradient-primary);
-            min-height: 100vh;
-            color: var(--dark-text);
-            padding: 2rem 0;
-        }
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
 
         .container {
             max-width: 1200px;
@@ -408,6 +409,17 @@
             color: var(--dark-text);
         }
 
+        .navbar {
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .navbar-brand {
+        font-weight: 700;
+        font-size: 1.5rem;
+        color: white !important;
+    }
+
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -515,27 +527,23 @@
 <body>
     <div class="container">
         <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="/project">
-                <i  class="fas fa-rocket me-2"></i>
-                Tech
-            </a>
-            <div class="d-flex align-items-center">
-            <div class="dropdown">
-                <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-user-circle me-2"></i>
-                <span id="currentUserName">Usuario</span>
-                </button>
-                <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Perfil</a></li>
-                <li><a class="dropdown-item" href="/cambiarpass"><i class="fas fa-cog me-2"></i>Cambiar contraseña</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
-                </ul>
-            </div>
-            </div>
+    <div class="container">
+      <a class="navbar-brand" href="/project"><i class="fas fa-rocket me-2"></i>tâches</a>
+      <div class="d-flex align-items-center">
+        <div class="dropdown">
+          <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-user-circle me-2"></i><span id="currentUserName">Usuario</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Perfil</a></li>
+            <li><a class="dropdown-item" href="/cambiarpass"><i class="fas fa-cog me-2"></i>Cambiar contraseña</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a></li>
+          </ul>
         </div>
-        </nav>
+      </div>
+    </div>
+  </nav>
         <!-- Header Principal -->
         <div class="main-header">
             <h2 class="main-title">
