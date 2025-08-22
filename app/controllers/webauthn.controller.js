@@ -46,13 +46,6 @@ export async function registerChallenge(req, res) {
     return res.json({ options });
 }
 
-// webauthn.controller.js
-
-// ... (resto de las importaciones y funciones)
-
-// webauthn.controller.js
-
-// ... (resto de las importaciones y funciones)
 
 export async function registerVerify(req, res) {
     const { email, cred } = req.body;
@@ -99,10 +92,6 @@ export async function registerVerify(req, res) {
             const credentialPublicKey = registrationInfo.credential.publicKey;
             const counter  = registrationInfo.credential.counter;
 
-            // Convertimos a strings
-            //const credIDbase64url = base64url.encode(credentialID);
-            //const credIDbase64url = arrayBufferToBase64Url(credentialID); 
-            //const pubKeyBase64 = credentialPublicKey.toString('base64');
             const pubKeyBase64 = base64url.encode(Buffer.from(credentialPublicKey));
 
             user.passkeys.push({
@@ -144,31 +133,6 @@ export async function loginChallenge(req, res) {
         // Guardar el challenge temporalmente
         challenges.set(email, challenge);
 
-        // Mapear todas las credenciales
-        /*
-        const allowCredentials = user.passkeys.map(pk => ({
-            id: pk.credentialID,
-            type: "public-key",
-        }));
-        
-       const allowCredentials = user.passkeys.map(pk => ({
-            id: base64url.toBuffer(pk.credentialID),
-            type: "public-key",
-            // transports: ["internal"], // opcional
-        }));
-
-
-
-
-        return res.json({
-            options: {
-                challenge,
-                rpId: "localhost",
-                userVerification: "preferred",
-                allowCredentials,
-            },
-        });
-        */
        const allowCredentials = user.passkeys.map(pk => ({
             id: pk.credentialID, 
             //id: base64url.toBuffer(pk.credentialID), 
@@ -198,7 +162,6 @@ export async function loginChallenge(req, res) {
     }
 }
 
-
 /**
  * LOGIN VERIFY
  * Verifica la respuesta del cliente contra el challenge
@@ -221,10 +184,16 @@ export async function loginVerify(req, res) {
         const receivedID = cred.id; // usar directamente
         const authenticator = user.passkeys.find(pk => pk.credentialID === cred.id);
 
-
-
         if (!authenticator) 
             return res.status(400).json({ message: "No se encontró la passkey" });
+
+        let pubkeyBuff = Buffer.from(authenticator.credentialPublicKey, "base64");
+        let counterToSend = authenticator.counter;
+        if (typeof counterToSend === "string") {
+            counterToSend = parseInt(counterToSend, 10);
+        }else if (typeof counterToSend === "bigint") {
+            counterToSend = Number(counterToSend);
+        }
 
         // Verificar la respuesta de autenticación
         let verification;
@@ -234,11 +203,11 @@ export async function loginVerify(req, res) {
                 expectedChallenge,
                 expectedOrigin: "http://localhost:4000",
                 expectedRPID: "localhost",
-                authenticator: {
-                    //credentialID: Buffer.from(authenticator.credentialID, "base64"),
-                    credentialID: base64url.toBuffer(authenticator.credentialID),
-                    credentialPublicKey: Buffer.from(authenticator.credentialPublicKey, "base64"),
-                    counter: authenticator.counter,
+                credential: {
+                    id: authenticator.credentialID,
+                    publicKey: pubkeyBuff,
+                    counter:Number(counterToSend),
+                    transports: authenticator.transports,
                 },
             });
         } catch (err) {
@@ -262,85 +231,5 @@ export async function loginVerify(req, res) {
     } catch (error) {
         console.error("Error en loginVerify:", error);
         res.status(500).json({ message: "Error verificando login" });
-    }
-}
-
-
-
-export async function registerVerifyCopia(req, res) {
-    const { email, cred } = req.body;
-
-    if (!email || !cred) {
-        return res.json({ verified: false, error: "Faltan datos de email o credencial." });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-        return res.json({ verified: false, error: "Usuario no encontrado." });
-    }
-
-    const expectedChallenge = challengeStore[email];
-    if (!expectedChallenge) {
-        return res.json({ verified: false, error: "Desafío no válido o expirado." });
-    }
-
-    let verification;
-    try {
-        verification = await verifyRegistrationResponse({
-            response: cred,
-            expectedChallenge,
-            expectedOrigin: "http://localhost:4000",
-            expectedRPID: "localhost",
-        });
-    } catch (error) {
-        console.error("Error durante la verificación de registro:", error);
-        return res.json({ verified: false, error: "La verificación de la passkey falló." });
-    }
-
-    console.log("verification:", verification);
-
-    if (!verification.verified) {
-        return res.json({ verified: false, error: "La verificación de la passkey no fue exitosa." });
-    }
-
-    const { registrationInfo } = verification;
-
-    if (
-        !registrationInfo ||
-        !registrationInfo.credential ||
-        !registrationInfo.credential.id ||
-        !registrationInfo.credential.publicKey
-    ) {
-        return res.status(500).json({ error: "Información de registro incompleta." });
-    }
-
-    try {
-        const credentialID = Buffer.from(registrationInfo.credential.id);
-        const credentialPublicKey = Buffer.from(registrationInfo.credential.publicKey);
-        const counter = registrationInfo.counter;
-
-        /*
-        user.passkeys.push({
-            credentialID: credentialID.toString("base64"),
-            credentialPublicKey: credentialPublicKey.toString("base64"),
-            counter,
-        });
-        */
-        const credentialIDbase64 = base64url.encode(registrationInfo.credential.id);
-        const credentialPublicKeyDbase64 =  registrationInfo.credential.publicKey.toString('base64');
-        user.passkeys.push({
-            credentialID: credentialIDbase64,
-            credentialPublicKey: credentialPublicKeyDbase64,
-            counter,
-            transports: registrationInfo.transports || ["internal"],
-        });
-
-        await user.save();
-        delete challengeStore[email]; // Limpiar desafío
-
-        return res.json({ verified: true });
-    } catch (err) {
-        console.error("Error guardando la passkey en la base de datos:", err);
-        return res.json({ verified: false, error: "No se pudo guardar la passkey." });
     }
 }

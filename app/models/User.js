@@ -13,7 +13,13 @@ const userSchema = new mongoose.Schema({
     passkeys: { type: Array, default: [] },
     webauthnChallenge: { type: String, default: null },
     twoFactorEnabled: { type: Boolean, default: false },
-    twoFactorSecret: { type: String, default: null }
+    twoFactorSecret: { type: String, default: null }, 
+    emailRecuperacion: { type: String, default: null }, 
+    recoveryCodes: [{
+    code: String,
+    expiresAt: Date,
+    used: { type: Boolean, default: false }
+    }],
     
 });
 

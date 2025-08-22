@@ -19,6 +19,10 @@ import * as webauthn from "./controllers/webauthn.controller.js";
 import {methods as project} from "./controllers/project.controller.js"
 import {methods as task} from "./controllers/task.controller.js";
 import * as twofa from "./controllers/twofa.controller.js";
+import { enviarCodigoRecuperacion } from "./services/recoveryEmailService.js";
+import crypto from "node:crypto";
+import bcrypt from "bcrypt"; 
+
 
 
 
@@ -137,10 +141,12 @@ app.get("/auth/google/callback",
 
 //Rutas
 app.get("/",authorization.soloPublico, (req,res)=> res.sendFile(__dirname + "/pages/login.html"));
+app.get("/politicas",authorization.soloPublico, (req,res)=> res.sendFile(__dirname + "/pages/politicas.html"));
 app.get("/register",authorization.soloPublico,(req,res)=> res.sendFile(__dirname + "/pages/register.html"));
 app.get("/admin",authorization.soloAdmin,(req,res)=> res.sendFile(__dirname + "/pages/admin/admin.html"));
 // server.js
 app.post("/api/login",authentication.login);
+app.post("/api/loginPasskey",authentication.loginPasskey);
 app.post("/api/register",authentication.register);
 app.post("/api/logout", (req, res) => {
     res.clearCookie("jwt", { path: "/" });
@@ -192,6 +198,263 @@ app.get("/api/users", authorization.soloAdmin, async (req, res) => {
 
 // Esta es la ruta para el archivo profile.html estático
 app.get("/profile", authorization.soloAdmin, (req, res) => res.sendFile(__dirname + "/pages/admin/profile.html"));
+app.post("/save-recovery-email", authorization.soloAdmin, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Validar formato de correo
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, error: "Correo inválido" });
+    }
+
+    // Obtener usuario desde el token
+    const token = req.cookies.jwt;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) {
+      return res.status(404).json({ success: false, error: "Usuario no encontrado" });
+    }
+
+    // Evitar que el correo de recuperación sea el mismo que el de login
+    if (user.email === email) {
+      return res.status(400).json({ success: false, error: "El correo de recuperación no puede ser igual al correo de inicio de sesión" });
+    }
+
+    user.emailRecuperacion = email;
+    await user.save();
+
+    res.json({ success: true, message: "Correo de recuperación guardado", emailRecuperacion: user.emailRecuperacion });
+  } catch (err) {
+    console.error("Error en save-recovery-email:", err);
+    res.status(500).json({ success: false, error: "Error interno del servidor" });
+  }
+});
+
+// GET: Obtener correo de recuperación
+app.get("/api/recovery-email", authorization.soloAdmin, async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findOne({ email: decoded.email }).select("emailRecuperacion");
+    if (!user) {
+      return res.status(404).json({ success: false, error: "Usuario no encontrado" });
+    }
+
+    res.json({
+      success: true,
+      emailRecuperacion: user.emailRecuperacion || null
+    });
+  } catch (err) {
+    console.error("Error en GET /api/recovery-email:", err);
+    res.status(500).json({ success: false, error: "Error interno del servidor" });
+  }
+});
+
+//Envio de codigos de acceso 
+function generarCodigo6() {
+  // 6 dígitos, con ceros a la izquierda
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+function hashSHA256(texto) {
+  return crypto.createHash("sha256").update(texto).digest("hex");
+}
+// POST /api/recovery/send-code
+app.post("/api/recovery/send-code", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: "Falta el email" });
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Evitar enumeración: respondemos genérico
+      return res.json({ success: true, sent: false, reason: "Si existe y tiene correo de recuperación, se enviará" });
+    }
+
+    // Debe existir y ser distinto al principal
+    if (!user.emailRecuperacion || user.emailRecuperacion === user.email) {
+      return res.json({ success: true, sent: false, reason: "No tiene correo de recuperación" });
+    }
+
+    // Cooldown de 60s usando ultimoTokenEnviado (puedes crear un campo propio si prefieres)
+    const ahora = new Date();
+    const cooldownMs = 60 * 1000;
+    if (user.ultimoTokenEnviado && (ahora - user.ultimoTokenEnviado) < cooldownMs) {
+      const seg = Math.ceil((cooldownMs - (ahora - user.ultimoTokenEnviado)) / 1000);
+      return res.status(429).json({ success: false, message: `Espera ${seg}s para reenviar otro código` });
+    }
+
+    // Limpieza de códigos expirados
+    user.recoveryCodes = (user.recoveryCodes || []).filter(rc => !rc.expiresAt || rc.expiresAt > new Date());
+
+    const code = generarCodigo6();
+    const codeHash = hashSHA256(code);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+
+    // Opcional: limitar a 3 códigos activos
+    if (user.recoveryCodes.length >= 3) {
+      user.recoveryCodes.shift(); // elimina el más viejo
+    }
+
+    user.recoveryCodes.push({ code: codeHash, expiresAt, used: false });
+    user.ultimoTokenEnviado = ahora;
+
+    await user.save();
+
+    // Enviar email al correo de recuperación
+    await enviarCodigoRecuperacion(user.emailRecuperacion, code);
+
+    return res.json({ success: true, sent: true, message: "Código enviado si el correo existe y tiene recuperación" });
+  } catch (err) {
+    console.error("Error /api/recovery/send-code:", err);
+    return res.status(500).json({ success: false, message: "Error enviando código" });
+  }
+});
+// POST /api/recovery/verify-code
+app.post("/api/recovery/verify-code", async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) return res.status(400).json({ success: false, message: "Faltan datos" });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ success: false, message: "Código inválido" });
+
+    const codeHash = hashSHA256(code);
+
+    // Buscar un código válido
+    const idx = (user.recoveryCodes || []).findIndex(rc =>
+      rc.code === codeHash && !rc.used && rc.expiresAt && rc.expiresAt > new Date()
+    );
+
+    if (idx === -1) {
+      return res.status(401).json({ success: false, message: "Código inválido o expirado" });
+    }
+
+    // Marcar como usado
+    user.recoveryCodes[idx].used = true;
+    await user.save();
+
+    // Iniciar sesión: mismo formato de JWT que ya usas
+    const token = jwt.sign(
+      { user: user.user, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
+    );
+
+    res.cookie("jwt", token, { httpOnly: true, path: "/" });
+    return res.json({ success: true, redirect: "/mensajeRe" });
+  } catch (err) {
+    console.error("Error /api/recovery/verify-code:", err);
+    return res.status(500).json({ success: false, message: "Error verificando código" });
+  }
+});
+app.get("/forgot", (req, res) => res.sendFile(__dirname + "/pages/forgot.html"));
+app.get("/mensajeRe", (req, res) => res.sendFile(__dirname + "/pages/mensajeRe.html"));
+app.get("/cambiarpass", (req, res) => res.sendFile(__dirname + "/pages/cambiarPass.html"));
+app.post("/api/change-password", async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({ success: false, message: "Falta la nueva contraseña" });
+    }
+
+    // Obtener usuario autenticado desde JWT
+    const token = req.cookies.jwt;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ email: decoded.email });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+    }
+
+    // 🔹 Revisar si tiene un código de recuperación válido (10 min, no usado)
+    const recoveryValid = (user.recoveryCodes || []).some(rc =>
+      !rc.used && rc.expiresAt && rc.expiresAt > new Date()
+    );
+
+    if (!recoveryValid) {
+      // 🔹 Si NO tiene código válido, debe ingresar contraseña actual
+      if (!currentPassword) {
+        return res.status(400).json({ success: false, message: "Debes ingresar tu contraseña actual" });
+      }
+
+      const bcrypt = await import("bcrypt");
+      const match = await bcrypt.compare(currentPassword, user.password);
+      if (!match) {
+        return res.status(401).json({ success: false, message: "La contraseña actual no es correcta" });
+      }
+    }
+
+    // 🔹 Guardar la nueva contraseña
+    const bcrypt = await import("bcrypt");
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    // 🔹 Si se usó en modo recuperación, invalidar los códigos activos
+    if (recoveryValid) {
+      user.recoveryCodes = [];
+    }
+
+    await user.save();
+
+    return res.json({ success: true, message: "Contraseña actualizada correctamente" });
+  } catch (err) {
+    console.error("Error en /api/change-password:", err);
+    return res.status(500).json({ success: false, message: "Error interno del servidor" });
+  }
+});
+app.get("/api/recovery/verify-active", async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.json({ active: false });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.json({ active: false });
+
+    const active = (user.recoveryCodes || []).some(rc =>
+      !rc.used && rc.expiresAt && rc.expiresAt > new Date()
+    );
+
+    return res.json({ active });
+  } catch (err) {
+    console.error("Error en /api/recovery/verify-active:", err);
+    res.json({ active: false });
+  }
+});
+// POST: Cambiar contraseña en recuperación
+app.post("/api/change-password-recovery", async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword) return res.status(400).json({ success: false, message: "Falta la nueva contraseña" });
+
+    // Obtenemos usuario autenticado desde JWT (ya creado tras verificar código)
+    const token = req.cookies.jwt;
+    if (!token) return res.status(401).json({ success: false, message: "No autorizado" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+    // Guardamos nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    // Invalidamos códigos de recuperación
+    user.recoveryCodes = [];
+    await user.save();
+
+    return res.json({ success: true, message: "Contraseña actualizada correctamente. Puedes iniciar sesión ahora." });
+  } catch (err) {
+    console.error("Error en /api/change-password-recovery:", err);
+    return res.status(500).json({ success: false, message: "Error interno del servidor" });
+  }
+});
+
+
+
+
 
 // Nueva ruta para obtener la información del usuario
 app.get('/api/user-info', authorization.soloAdmin, async (req, res) => {
@@ -210,6 +473,23 @@ app.get('/api/user-info', authorization.soloAdmin, async (req, res) => {
         console.error("Error en /api/user-info:", err);
         res.status(401).json({ error: 'Token inválido o expirado' });
     }
+});
+app.get('/api/enable2fa', authorization.soloAdmin, async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ email: decoded.email });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Envía si tiene 2FA activado
+    res.json({ twoFAEnabled: user.twoFactorEnabled });
+  } catch (err) {
+    console.error("Error en /api/enable2fa:", err);
+    res.status(401).json({ error: 'Token inválido o expirado' });
+  }
 });
 
 app.post('/webauthn/register-challenge', authorization.soloAdmin, webauthn.registerChallenge);

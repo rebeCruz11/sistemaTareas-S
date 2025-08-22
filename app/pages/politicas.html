@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tâches - Políticas y Acuerdos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .profile-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1.5rem;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+      padding: 3rem;
+      max-width: 900px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .profile-card h1 {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #000000;
+    }
+
+    .profile-card p.text-center {
+      font-size: 1.1rem;
+      color: #555;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .security-card {
+              background: linear-gradient(135deg, #d8dfff);
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .security-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+    }
+
+    .security-card h3 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #000000;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .security-card ol {
+      color: #333;
+      font-size: 1rem;
+      line-height: 1.6;
+      padding-left: 1.2rem;
+    }
+
+    .security-card ol li {
+      margin-bottom: 0.8rem;
+      text-align: justify;
+    }
+
+    .btn {
+      display: inline-block;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 0.9rem 1.8rem;
+      border-radius: 0.8rem;
+      text-align: center;
+      transition: background 0.3s, transform 0.2s;
+      margin: 0 auto;
+    }
+
+    .btn:hover {
+      background: #4b0082;
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      .profile-card {
+        padding: 2rem;
+      }
+      .security-card {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-card">
+    <h1>Políticas de Privacidad y Acuerdos</h1>
+    <p class="text-center">Bienvenido a <strong>Tâches</strong>. Valoramos tu confianza y queremos que entiendas cómo manejamos tu información.</p>
+
+    <div class="security-card">
+      <h3>Acuerdos Generales</h3>
+      <ol>
+        <li><strong>Recolección de Datos:</strong> Recopilamos información personal básica como nombre, correo electrónico y datos de uso, con el fin de mejorar tu experiencia en la plataforma.</li>
+        <li><strong>Uso de la Información:</strong> La información se utiliza exclusivamente para la gestión de tu cuenta, personalización del servicio y comunicación relacionada con Tâches.</li>
+        <li><strong>Seguridad de los Datos:</strong> Implementamos medidas de seguridad para proteger tu información, evitando accesos no autorizados, pérdidas o modificaciones indebidas.</li>
+        <li><strong>Acuerdos del Usuario:</strong> Al usar Tâches aceptas nuestras políticas y te comprometes a un uso responsable de la plataforma, respetando los derechos de otros usuarios.</li>
+        <li><strong>Modificaciones:</strong> Podremos actualizar estas políticas en cualquier momento. Te notificaremos sobre cambios importantes a través de la plataforma o correo electrónico.</li>
+        <li><strong>Contacto:</strong> Si tienes preguntas o inquietudes sobre nuestras políticas, puedes escribirnos a <strong>soporte@taches.com</strong>.</li>
+      </ol>
+    </div>
+
+    <a href="/register" class="btn">⬅ Volver al Registro</a>
+  </div>
+</body>
+</html>

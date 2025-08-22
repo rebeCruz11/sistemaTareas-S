@@ -145,6 +145,47 @@ async function register(req, res) {
         res.status(500).send({ status: "Error", message: "Error en el servidor no se pueedo guardar", error: err.message });
     }
 }
+async function loginPasskey(req, res) {
+    try {
+        const { email } = req.body;
+
+        const usuarioAResvisar = await User.findOne({ email  });
+
+        // Verificar si el correo ha sido confirmado
+        if (!usuarioAResvisar.emailVerificado) {
+            return res.status(400).send({ status: "Error", message: "Debes verificar tu correo antes de iniciar sesión" });
+        }
+
+        const token = jsonwebtoken.sign(
+            {email: usuarioAResvisar.email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRATION }
+        );
+
+        const cookieOption = {
+            expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000),
+            path: "/",
+            httpOnly: true
+        };
+
+        res.cookie("jwt", token, cookieOption);
+
+        if (usuarioAResvisar.twoFactorEnabled) {
+            req.session.pending2FA = {
+                userId: usuarioAResvisar._id,
+                email: usuarioAResvisar.email
+            };
+            return res.json({ status: "ok", message: "2FA requerido", redirect: "/2fa" });
+        }
+
+        // Si no tiene 2FA, sigue como antes:
+        res.cookie("jwt", token, cookieOption);
+        res.json({ status: "ok", message: "Usuario logueado", redirect: "/project" });
 
 
-export const methods = { login, register };
+    } catch (err) {
+        res.status(500).send({ status: "Error", message: "Error en el servidor", error: err.message });
+    }
+}
+
+export const methods = { login, register, loginPasskey };

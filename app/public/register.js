@@ -1,23 +1,3 @@
-function generarContrasena(longitud = 12) {
-    const mayus = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const minus = "abcdefghijklmnopqrstuvwxyz";
-    const numeros = "0123456789";
-    const simbolos = "!@#$%^&*()_+[]{}<>?,.";
-
-    const todo = mayus + minus + numeros + simbolos;
-
-    let password = "";
-    password += mayus[Math.floor(Math.random() * mayus.length)];
-    password += minus[Math.floor(Math.random() * minus.length)];
-    password += numeros[Math.floor(Math.random() * numeros.length)];
-    password += simbolos[Math.floor(Math.random() * simbolos.length)];
-
-    for (let i = 4; i < longitud; i++) {
-        password += todo[Math.floor(Math.random() * todo.length)];
-    }
-
-    return password.split('').sort(() => Math.random() - 0.5).join('');
-}
 function validarUsuario(usuario) {
     const feedback = [];
 
@@ -85,14 +65,6 @@ function actualizarIndicador(password) {
         texto.textContent = "Contraseña segura ✔";
     }
 }
-
-// Generar contraseña
-document.getElementById("generatePassword").addEventListener("click", () => {
-    const nuevaPass = generarContrasena();
-    const inputPass = document.getElementById("password");
-    inputPass.value = nuevaPass;
-    actualizarIndicador(nuevaPass);
-});
 
 // Mostrar/ocultar contraseña
 document.getElementById("togglePassword").addEventListener("click", () => {

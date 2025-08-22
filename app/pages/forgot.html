@@ -1,0 +1,132 @@
+<!-- /pages/forgot.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Recuperar acceso | tâches</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --c1:#0d6efd; --ok:#16a34a; --err:#dc2626; --bd:#e5e7eb;
+    }
+    body{font-family: Inter,system-ui,Arial; background:#f9fafb; margin:0; display:grid; place-items:center; min-height:100vh}
+    .card{background:#fff; max-width:460px; width:100%; padding:28px; border:1px solid var(--bd); border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,.05)}
+    h1{margin:0 0 4px; font-size:22px}
+    p.hint{margin:0 0 16px; color:#6b7280}
+    .group{margin-bottom:14px}
+    label{display:block; font-weight:600; margin:0 0 6px}
+    input{width:100%; padding:12px 14px; border:1px solid var(--bd); border-radius:10px; outline:none}
+    input:focus{border-color:var(--c1)}
+    button{width:100%; padding:12px 14px; border:none; border-radius:12px; background:var(--c1); color:#fff; font-weight:700; cursor:pointer}
+    button.secondary{background:#111}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .msg{margin:10px 0; padding:12px; border-radius:10px; font-size:14px; display:none}
+    .msg.ok{background:#ecfdf5; color:#065f46; display:block}
+    .msg.err{background:#fef2f2; color:#7f1d1d; display:block}
+    .muted{color:#6b7280; font-size:12px; text-align:center; margin-top:12px}
+    a{color:#111}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Recuperar acceso</h1>
+    <p class="hint">Te enviaremos un código al <b>correo de recuperación</b> si lo tienes configurado.</p>
+
+    <div class="group">
+      <label for="email">Correo de inicio de sesión</label>
+      <input id="email" type="email" placeholder="tu@correo.com" autocomplete="email" required>
+    </div>
+
+    <div class="row">
+      <button id="sendBtn">Enviar código</button>
+      <a href="/"><button type="button" class="secondary">Volver</button></a>
+    </div>
+
+    <div id="sendMsg" class="msg"></div>
+
+    <hr style="margin:16px 0; border:none; border-top:1px solid var(--bd)">
+
+    <div class="group">
+      <label for="code">Ingresa el código</label>
+      <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000">
+    </div>
+    <button id="verifyBtn">Validar código e ingresar</button>
+
+    <div id="verifyMsg" class="msg"></div>
+
+    <p class="muted">¿No tienes correo de recuperación? <a href="/contacto" target="_blank">Contacta con soporte</a>.</p>
+  </div>
+
+  <script>
+    const sendBtn = document.getElementById("sendBtn");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const sendMsg = document.getElementById("sendMsg");
+    const verifyMsg = document.getElementById("verifyMsg");
+
+    function showMsg(el, text, ok=true){
+      el.className = "msg " + (ok ? "ok" : "err");
+      el.textContent = text;
+      el.style.display = "block";
+    }
+
+    sendBtn.addEventListener("click", async () => {
+      sendMsg.style.display = "none";
+      const email = document.getElementById("email").value.trim();
+      if(!email) return showMsg(sendMsg, "Ingresa tu correo", false);
+
+      try {
+        const res = await fetch("/api/recovery/send-code", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if(res.status === 429){
+          return showMsg(sendMsg, data.message || "Espera antes de solicitar otro código", false);
+        }
+
+        if(data.sent){
+          showMsg(sendMsg, "Si tu cuenta tiene correo de recuperación, te enviamos un código. Revisa tu bandeja.");
+        } else {
+          // Si la API nos dijo explícitamente que no tiene correo de rec.
+          if (data.reason === "No tiene correo de recuperación") {
+            showMsg(sendMsg, "Tu cuenta no tiene correo de recuperación configurado. Contacta con soporte.", false);
+          } else {
+            showMsg(sendMsg, "Si tu cuenta existe y tiene recuperación, recibirá un código.");
+          }
+        }
+      } catch (e) {
+        showMsg(sendMsg, "Error al enviar el código", false);
+      }
+    });
+
+    verifyBtn.addEventListener("click", async () => {
+      verifyMsg.style.display = "none";
+      const email = document.getElementById("email").value.trim();
+      const code = document.getElementById("code").value.trim();
+
+      if(!email || !code) return showMsg(verifyMsg, "Ingresa tu correo y el código", false);
+
+      try {
+        const res = await fetch("/api/recovery/verify-code", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ email, code })
+        });
+        const data = await res.json();
+
+        if(!data.success){
+          return showMsg(verifyMsg, data.message || "Código inválido o expirado", false);
+        }
+
+        // Ingresar (cookie JWT ya viene desde el backend)
+        window.location.href = data.redirect || "/mensajeRe";
+      } catch (e) {
+        showMsg(verifyMsg, "Error verificando el código", false);
+      }
+    });
+  </script>
+</body>
+</html>
