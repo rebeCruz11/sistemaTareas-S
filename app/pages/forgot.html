@@ -1,4 +1,3 @@
-<!-- /pages/forgot.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,25 +5,97 @@
   <title>Recuperar acceso | tâches</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    :root{
-      --c1:#0d6efd; --ok:#16a34a; --err:#dc2626; --bd:#e5e7eb;
+    :root {
+      --c1:#667eea;
+      --c2:#764ba2;
+      --ok:#16a34a;
+      --err:#dc2626;
+      --bd:#e5e7eb;
     }
-    body{font-family: Inter,system-ui,Arial; background:#f9fafb; margin:0; display:grid; place-items:center; min-height:100vh}
-    .card{background:#fff; max-width:460px; width:100%; padding:28px; border:1px solid var(--bd); border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,.05)}
-    h1{margin:0 0 4px; font-size:22px}
-    p.hint{margin:0 0 16px; color:#6b7280}
-    .group{margin-bottom:14px}
-    label{display:block; font-weight:600; margin:0 0 6px}
-    input{width:100%; padding:12px 14px; border:1px solid var(--bd); border-radius:10px; outline:none}
-    input:focus{border-color:var(--c1)}
-    button{width:100%; padding:12px 14px; border:none; border-radius:12px; background:var(--c1); color:#fff; font-weight:700; cursor:pointer}
-    button.secondary{background:#111}
-    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    .msg{margin:10px 0; padding:12px; border-radius:10px; font-size:14px; display:none}
-    .msg.ok{background:#ecfdf5; color:#065f46; display:block}
-    .msg.err{background:#fef2f2; color:#7f1d1d; display:block}
-    .muted{color:#6b7280; font-size:12px; text-align:center; margin-top:12px}
-    a{color:#111}
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--c1), var(--c2));
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: #fff;
+      max-width: 420px;
+      width: 100%;
+      padding: 32px;
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      text-align: center;
+    }
+    p.hint {
+      margin: 0 0 20px;
+      color: #6b7280;
+      text-align: center;
+    }
+    .group { margin-bottom: 18px; }
+    label { display:block; font-weight:600; margin-bottom:6px; }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--bd);
+      border-radius: 10px;
+      outline: none;
+      font-size: 14px;
+    }
+    input:focus { border-color: var(--c1); }
+    .btn-gradient {
+      width: 100%;
+      border-radius: 50px;
+      background: linear-gradient(135deg, var(--c1), var(--c2));
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      padding: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+    .btn-gradient:hover {
+      transform: scale(1.03);
+      box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+    }
+    .btn-dark {
+      width: 100%;
+      border-radius: 50px;
+      background: #111;
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      padding: 12px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .msg {
+      margin: 12px 0;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+    }
+    .msg.ok { background:#ecfdf5; color:#065f46; display:block; }
+    .msg.err { background:#fef2f2; color:#7f1d1d; display:block; }
+    .muted {
+      color: #6b7280;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 16px;
+    }
+    .muted a { color: var(--c2); text-decoration: none; }
+    hr { margin: 20px 0; border:none; border-top:1px solid var(--bd); }
   </style>
 </head>
 <body>
@@ -38,19 +109,19 @@
     </div>
 
     <div class="row">
-      <button id="sendBtn">Enviar código</button>
-      <a href="/"><button type="button" class="secondary">Volver</button></a>
+      <button id="sendBtn" class="btn-gradient">Enviar código</button>
+      <button type="button" class="btn-dark" onclick="location.href='/'">Volver</button>
     </div>
 
     <div id="sendMsg" class="msg"></div>
 
-    <hr style="margin:16px 0; border:none; border-top:1px solid var(--bd)">
+    <hr>
 
     <div class="group">
       <label for="code">Ingresa el código</label>
       <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000">
     </div>
-    <button id="verifyBtn">Validar código e ingresar</button>
+    <button id="verifyBtn" class="btn-gradient">Validar código e ingresar</button>
 
     <div id="verifyMsg" class="msg"></div>
 
@@ -90,7 +161,6 @@
         if(data.sent){
           showMsg(sendMsg, "Si tu cuenta tiene correo de recuperación, te enviamos un código. Revisa tu bandeja.");
         } else {
-          // Si la API nos dijo explícitamente que no tiene correo de rec.
           if (data.reason === "No tiene correo de recuperación") {
             showMsg(sendMsg, "Tu cuenta no tiene correo de recuperación configurado. Contacta con soporte.", false);
           } else {
@@ -121,7 +191,6 @@
           return showMsg(verifyMsg, data.message || "Código inválido o expirado", false);
         }
 
-        // Ingresar (cookie JWT ya viene desde el backend)
         window.location.href = data.redirect || "/mensajeRe";
       } catch (e) {
         showMsg(verifyMsg, "Error verificando el código", false);

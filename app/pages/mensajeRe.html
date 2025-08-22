@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tâches - Recuperación</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -24,15 +25,25 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1.5rem;
       text-align: center;
     }
-    .profile-card input {
+    .input-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-group input {
       width: 100%;
       padding: 0.8rem;
       border-radius: 0.6rem;
       border: 1px solid #ccc;
-      margin-bottom: 1rem;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      cursor: pointer;
+      color: #555;
     }
     .btn {
       display: inline-block;
@@ -53,6 +64,29 @@
     #msg {
       font-weight: 600;
     }
+    .progress {
+      height: 8px;
+      border-radius: 5px;
+      background: #eee;
+      margin-top: 0.5rem;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 5px;
+      transition: width 0.3s ease;
+    }
+    #passwordFeedback {
+      text-align: left;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+    #passwordFeedback span {
+      display: block;
+      margin: 2px 0;
+    }
+    .valid { color: green; }
+    .invalid { color: red; }
   </style>
 </head>
 <body>
@@ -60,55 +94,69 @@
     <h1>Recuperación exitosa</h1>
     <p>Ingresa tu nueva contraseña para volver a acceder a <strong>Tâches</strong>.</p>
 
-    <input type="password" id="newPassword" placeholder="Nueva contraseña" name="newPassword" class="form-control" required>
-    <i class="fas fa-eye password-toggle" id="toggleNewPass"></i>
-    <div class="progress mt-2">
-          <div id="passwordStrength" class="progress-bar bg-danger" style="width:0%"></div>
-        </div>
-        <div id="passwordFeedback"></div>
+    <div class="input-group">
+      <input type="password" id="newPassword" placeholder="Nueva contraseña" required>
+      <i class="fas fa-eye password-toggle" id="toggleNewPass"></i>
+    </div>
+
+    <div class="progress">
+      <div id="passwordStrength" class="progress-bar bg-danger"></div>
+    </div>
+    <div id="passwordFeedback"></div>
+
     <button id="changePassBtn" class="btn">Actualizar contraseña</button>
 
     <div id="msg"></div>
   </div>
 
   <script>
-    // Mostrar/ocultar contraseña
-  function togglePassword(inputId, toggleId) {
-    const input = document.getElementById(inputId);
-    const toggle = document.getElementById(toggleId);
-    toggle.addEventListener("click", () => {
-      input.type = input.type === "password" ? "text" : "password";
-      toggle.classList.toggle("fa-eye-slash");
-    });
-  }
-      togglePassword("currentPassword", "toggleCurrentPass");
-      togglePassword("newPassword", "toggleNewPass");
-      // Validación de contraseña
-      function validarContrasena(password) {
-          let fuerza = 0;
-          const feedback = [];
-          if (password.length >= 12) fuerza++; else feedback.push("Mínimo 12 caracteres");
-          if (/[A-Z]/.test(password)) fuerza++; else feedback.push("Debe incluir mayúsculas");
-          if (/[a-z]/.test(password)) fuerza++; else feedback.push("Debe incluir minúsculas");
-          if (/[0-9]/.test(password)) fuerza++; else feedback.push("Debe incluir números");
-          if (/[^A-Za-z0-9]/.test(password)) fuerza++; else feedback.push("Debe incluir símbolos");
-          return { fuerza, feedback };
-      }
+    // Toggle mostrar/ocultar contraseña
+    function togglePassword(inputId, toggleId) {
+      const input = document.getElementById(inputId);
+      const toggle = document.getElementById(toggleId);
+      toggle.addEventListener("click", () => {
+        input.type = input.type === "password" ? "text" : "password";
+        toggle.classList.toggle("fa-eye-slash");
+      });
+    }
+    togglePassword("newPassword", "toggleNewPass");
 
+    // Validar contraseña
+    function validarContrasena(password) {
+      return {
+        length: password.length >= 12,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        symbol: /[^A-Za-z0-9]/.test(password)
+      };
+    }
 
     function actualizarIndicador(password) {
-      const { fuerza, feedback } = validarContrasena(password);
+      const validaciones = validarContrasena(password);
       const barra = document.getElementById("passwordStrength");
-      const texto = document.getElementById("passwordFeedback");
+      const feedback = document.getElementById("passwordFeedback");
+
+      let fuerza = Object.values(validaciones).filter(v => v).length;
       const porcentajes = [0, 20, 40, 60, 80, 100];
       barra.style.width = porcentajes[fuerza] + "%";
-      if (fuerza <= 2) { barra.className = "progress-bar bg-danger"; texto.textContent = feedback.join(", "); }
-      else if (fuerza <= 4) { barra.className = "progress-bar bg-warning"; texto.textContent = feedback.join(", "); }
-      else { barra.className = "progress-bar bg-success"; texto.textContent = "Contraseña segura ✔"; }
-  }
-      document.getElementById("newPassword").addEventListener("input", e => {
+      barra.style.background =
+        fuerza <= 2 ? "red" : fuerza <= 4 ? "orange" : "green";
+
+      feedback.innerHTML = `
+        <span class="${validaciones.length ? 'valid' : 'invalid'}">Mínimo 12 caracteres</span>
+        <span class="${validaciones.upper ? 'valid' : 'invalid'}">Debe incluir mayúsculas</span>
+        <span class="${validaciones.lower ? 'valid' : 'invalid'}">Debe incluir minúsculas</span>
+        <span class="${validaciones.number ? 'valid' : 'invalid'}">Debe incluir números</span>
+        <span class="${validaciones.symbol ? 'valid' : 'invalid'}">Debe incluir símbolos</span>
+      `;
+    }
+
+    document.getElementById("newPassword").addEventListener("input", e => {
       actualizarIndicador(e.target.value);
-  });
+    });
+
+    // Enviar contraseña al backend
     async function changePassword() {
       const newPassword = document.getElementById("newPassword").value;
       const msg = document.getElementById("msg");
@@ -127,8 +175,7 @@
 
         if (data.success) {
           document.getElementById("newPassword").value = "";
-            // Redirigir al mensaje de éxito
-            window.location.href = "/project";
+          window.location.href = "/project";
         }
       } catch (err) {
         console.error(err);

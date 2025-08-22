@@ -128,7 +128,7 @@ app.get("/auth/google/callback",
             );
 
             res.cookie("jwt", token, { httpOnly: true, path: "/" });
-            res.redirect("/admin");
+            res.redirect("/project"); // Redirige al proyecto
         } catch (err) {
             console.error("Error callback Google:", err);
             res.redirect("/"); // evita mostrar error crudo

@@ -5,89 +5,115 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Verifica tu correo</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     body {
-      background: #f6f8fa;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar */
+    .navbar {
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .navbar-brand {
+      font-weight: 700;
+      color: #764ba2 !important;
+    }
+
+    /* Card central */
+    .container-card {
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 2rem;
     }
     .card {
-      max-width: 460px;
+      max-width: 480px;
       width: 100%;
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      border-radius: 1rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
       padding: 2rem;
-      text-align: center;
       background: #fff;
+      text-align: center;
     }
     .icon {
-      font-size: 3rem;
+      font-size: 3.5rem;
       color: #28a745;
       margin-bottom: 1rem;
     }
     .btn-primary {
-      background: #0d6efd;
+      background: #667eea;
       border: none;
       padding: 10px 20px;
       border-radius: 8px;
+      transition: background 0.3s;
+    }
+    .btn-primary:hover {
+      background: #546de5;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="icon">📧</div>
-    <h3 class="mb-3">Verifica tu correo</h3>
-    <p class="text-muted">Hemos enviado un enlace de verificación a tu correo electrónico.</p>
-    <p class="text-muted">Si el enlace ha expirado o no lo recibiste, solicita uno nuevo:</p>
-    
-    <button id="reenviar" class="btn btn-primary">Generar nuevo enlace</button>
-    <p id="mensaje" class="mt-3"></p>
+  <!-- Card -->
+  <div class="container-card">
+    <div class="card">
+      <div class="icon">📧</div>
+      <h3 class="mb-3">Verifica tu correo</h3>
+      <p class="text-muted">Hemos enviado un enlace de verificación a tu correo electrónico.</p>
+      <p class="text-muted">Si el enlace ha expirado o no lo recibiste, solicita uno nuevo:</p>
+      
+      <button id="reenviar" class="btn btn-primary w-100">Generar nuevo enlace</button>
+      <p id="mensaje" class="mt-3"></p>
+    </div>
   </div>
 
   <script>
-  const emailGuardado = localStorage.getItem("emailRegistro");
+    const emailGuardado = localStorage.getItem("emailRegistro");
 
-  if (!emailGuardado) {
-    window.location.href = "/acceso-denegado";
-  } else {
-    // Llamada al servidor para verificar el correo
-    fetch("/api/verificar-correo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: emailGuardado })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === "error") {
-        window.location.href = "/acceso-denegado"; // No existe en la BD
-      } else if (data.verificado) {
-        window.location.href = "/"; 
+    if (!emailGuardado) {
+      window.location.href = "/acceso-denegado";
+    } else {
+      // Verificar en el servidor si ya está validado
+      fetch("/api/verificar-correo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailGuardado })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "error") {
+          window.location.href = "/acceso-denegado"; 
+        } else if (data.verificado) {
+          window.location.href = "/"; 
+        }
+      });
+    }
+
+    document.getElementById("reenviar").addEventListener("click", async () => {
+      const res = await fetch("/api/reenviar-verificacion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailGuardado })
+      });
+
+      const data = await res.json();
+      const mensaje = document.getElementById("mensaje");
+
+      if (data.status === "ok") {
+        mensaje.textContent = data.message;
+        mensaje.className = "text-success mt-3";
+      } else {
+        mensaje.textContent = data.message;
+        mensaje.className = "text-danger mt-3";
       }
     });
-  }
-
-  document.getElementById("reenviar").addEventListener("click", async () => {
-    const res = await fetch("/api/reenviar-verificacion", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: emailGuardado })
-    });
-
-    const data = await res.json();
-    const mensaje = document.getElementById("mensaje");
-
-    if (data.status === "ok") {
-      mensaje.textContent = data.message;
-      mensaje.className = "text-success mt-3";
-    } else {
-      mensaje.textContent = data.message;
-      mensaje.className = "text-danger mt-3";
-    }
-  });
-</script>
-
+  </script>
 </body>
 </html>
