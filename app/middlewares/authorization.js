@@ -13,7 +13,7 @@ async function soloAdmin(req, res, next) {
 async function soloPublico(req, res, next) {
     const logueado = await revisarCookie(req);
     if (!logueado) return next();
-    return res.redirect("/admin");
+    return res.redirect("/project");
 }
 
 async function revisarCookie(req) {
